@@ -1,0 +1,52 @@
+name: Deploy DAGs and Trigger Airflow
+
+on:
+  push:
+    paths:
+      - "dags/**"
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Sync DAGs to S3
+        run: |
+          aws s3 sync ./dags s3://your-airflow-dag-bucket/dags
+
+      # （可选）如果你要构建自己的 Airflow Docker 镜像并推到 ECR
+      # - name: Login to Amazon ECR
+      #   id: login-ecr
+      #   uses: aws-actions/amazon-ecr-login@v2
+      #
+      # - name: Build and push Docker image
+      #   env:
+      #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      #     ECR_REPOSITORY: airflow
+      #     IMAGE_TAG: latest
+      #   run: |
+      #     docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f docker/Dockerfile docker
+      #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Trigger Airflow DAG run
+        env:
+          AIRFLOW_API_URL: ${{ secrets.AIRFLOW_API_URL }}
+          AIRFLOW_USERNAME: ${{ secrets.AIRFLOW_USERNAME }}
+          AIRFLOW_PASSWORD: ${{ secrets.AIRFLOW_PASSWORD }}
+        run: |
+          DAG_ID="github_trigger_pipeline"
+          curl -X POST "${AIRFLOW_API_URL}/api/v1/dags/${DAG_ID}/dagRuns" \
+            -H "Content-Type: application/json" \
+            -u "${AIRFLOW_USERNAME}:${AIRFLOW_PASSWORD}" \
+            -d '{"conf":{"source":"github","reason":"push"}}'
