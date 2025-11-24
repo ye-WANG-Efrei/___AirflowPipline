@@ -43,5 +43,14 @@ services:
     <<: *airflow-common
     command: scheduler
 
+  airflow-init:    # 
+    <<: *airflow-common
+    command: >
+      bash -c "
+      airflow db init &&
+      airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com
+      "
+    restart: "no"
+
 volumes:
   postgres-db-volume:
