@@ -1,4 +1,4 @@
-version: '3.8'
+#vesion: '3.8' #obsolete, no longer need that header
 
 x-airflow-common:
   &airflow-common
