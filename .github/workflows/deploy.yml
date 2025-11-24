@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - "dags/**"
+      - "data/**"
+      - "src/**" 
   workflow_dispatch: {}
 
 jobs:
