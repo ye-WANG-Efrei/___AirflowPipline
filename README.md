@@ -39,6 +39,7 @@ aws-airflow-pipeline/
 ## 目录结构
 
 ```
+pass
 ```
 ## EC2文件结构
 ```
