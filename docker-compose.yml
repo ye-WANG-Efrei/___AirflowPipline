@@ -1,4 +1,4 @@
-#vesion: '3.8' #obsolete, no longer need that header
+#version: '3.8'  #最新版本 顶行命令 obsolete
 
 x-airflow-common:
   &airflow-common

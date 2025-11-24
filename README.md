@@ -49,3 +49,36 @@ aws-airflow-pipeline/
     └── Dockerfile
 
 ```
+## EC2
+安装Docker 
+```python
+sudo yum update -y
+sudo yum install -y docker        # AL2023 使用此命令安装 Docker。:contentReference[oaicite:1]{index=1}
+sudo systemctl enable --now docker
+sudo usermod -aG docker ec2-user  # 将 ec2-user 加入 docker 组，以便可以不 sudo 使用 docker。:contentReference[oaicite:2]{index=2}
+
+```
+
+Git—安装和拉取
+```powershell
+sudo yum install git -y
+cd ~   # 或你希望放项目的目录
+git clone https://github.com/ye-WANG-Efrei/___AirflowPipline.git
+cd ___AirflowPipline
+
+```
+
+Doker compose-plugin RPM
+```Powershell
+sudo mkdir -p /usr/libexec/docker/cli-plugins/
+sudo curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64 \
+     -o /usr/libexec/docker/cli-plugins/docker-compose
+sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose
+
+#如果遇到了 docker-compose is not a docker command 是因为docker-compose 和docker compose的语法版本，安装 docker compose plugin
+sudo mkdir -p /usr/libexec/docker/cli-plugins/
+sudo curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64 \
+  -o /usr/libexec/docker/cli-plugins/docker-compose
+sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose
+
+```
