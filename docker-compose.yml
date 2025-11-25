@@ -35,11 +35,19 @@ services:
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
     #不需要port 因为postgres只对内访问不对外暴露
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
 
   airflow-webserver:
     <<: *airflow-common
     command: webserver
     restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - "8080:8080"
     volumes:
@@ -49,6 +57,9 @@ services:
     <<: *airflow-common   
     command: scheduler
     restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - ./dags:/opt/airflow/dags
 
