@@ -13,7 +13,7 @@
 - GitHub actions 可直接触发 ECR 镜像构建
 - EC2 启动时只需 docker pull + docker-compose up 即可恢复完整系统 保证HA。
 
-### 部署方式：
+### 结构：
 
 ```
 aws-airflow-pipeline/
@@ -36,11 +36,6 @@ aws-airflow-pipeline/
 
 ```
 
-## 目录结构
-
-```
-pass
-```
 ## EC2文件结构
 ```
 /home/ec2-user/airflow/
