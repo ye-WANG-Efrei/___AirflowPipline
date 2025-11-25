@@ -176,4 +176,28 @@ sudo systemctl start docker
 ```
 sudo systemctl status docker
 ```  
-看到 `Loaded: enabled` 和 `Active: active (running)` 就表示开机会自动启动。
+看到 `Loaded: enabled` 和 `Active: active (running)` 就表示开机会自动启动。  
+Airflow 容器自动启动
+在你的 docker-compose.yml 文件里，给每个服务加上：
+```
+restart: always
+```
+
+举例：
+```yml
+services:
+  airflow-webserver:
+    image: apache/airflow:2.10.2-python3.12
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    depends_on:
+      - airflow-scheduler
+      - postgres
+```
+这样，只要 Docker 启动，容器就会：自动启动  
+如果崩溃会自动重启
