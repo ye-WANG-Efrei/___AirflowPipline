@@ -33,10 +33,12 @@ services:
       POSTGRES_DB: airflow
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
+    #不需要port 因为postgres只对内访问不对外暴露
 
   airflow-webserver:
     <<: *airflow-common
     command: webserver
+    restart: always
     ports:
       - "8080:8080"
     volumes:
@@ -45,6 +47,7 @@ services:
   airflow-scheduler:
     <<: *airflow-common   
     command: scheduler
+    restart: always
     volumes:
       - ./dags:/opt/airflow/dags
 
