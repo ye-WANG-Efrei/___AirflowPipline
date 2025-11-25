@@ -69,7 +69,7 @@ cd ___AirflowPipline
 
 ```
 
-Doker compose-plugin RPM
+Doker compose-plugin RPM 这一步是为创建相对应的文件夹和授予权限
 ```Powershell
 sudo mkdir -p /usr/libexec/docker/cli-plugins/
 sudo curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64 \
@@ -82,6 +82,13 @@ sudo curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker
   -o /usr/libexec/docker/cli-plugins/docker-compose
 sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose
 
+```
+
+第一次启动  
+初始化 Airflow 必须的数据库表、权限系统、用户、连接、角色等一次性动作。
+不执行它，Airflow 根本启动不了。
+```
+docker-compose up airflow-init
 ```
 
 ValueError: Fernet key must be 32 url-safe base64-encoded bytes.  
