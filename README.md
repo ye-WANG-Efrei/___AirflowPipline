@@ -201,3 +201,41 @@ services:
 ```
 这样，只要 Docker 启动，容器就会：自动启动  
 如果崩溃会自动重启
+#### bug 
+```pgsql
+database system is ready to accept connections
+LOG: received fast shutdown request
+```
+缺少依赖，造成如下反应：   
+scheduler 比 postgres 启动早  
+scheduler 连接失败  
+scheduler 挂  
+webserver 也挂  
+postgres 被 docker 停掉  
+整组全部 Exited  
+修改 docker-compose.yml  
+把 postgres 段替换成：
+```yml
+postgres:
+  image: postgres:15
+  restart: always
+  environment:
+    POSTGRES_USER: airflow
+    POSTGRES_PASSWORD: airflow
+    POSTGRES_DB: airflow
+  volumes:
+    - postgres-db-volume:/var/lib/postgresql/data
+  healthcheck:
+    test: ["CMD", "pg_isready", "-U", "airflow"]
+    interval: 10s
+    retries: 5
+    start_period: 10s
+``` 
+  
+并在 scheduler / webserver 都加：
+```yml
+depends_on:
+  postgres:
+    condition: service_healthy
+```
+
