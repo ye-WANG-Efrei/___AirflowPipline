@@ -165,3 +165,15 @@ airflowpipline-airflow-scheduler-1   apache/airflow:2.10.2-python3.12   "/usr/bi
 airflowpipline-airflow-webserver-1   apache/airflow:2.10.2-python3.12   "/usr/bin/dumb-init …"   airflow-webserver   2 minutes ago   Up 2 minutes   0.0.0.0:8080->8080/tcp, :::8080->8080/tcp
 airflowpipline-postgres-1            postgres:15                        "docker-entrypoint.s…"   postgres            6 minutes ago   Up 6 minutes   5432/tcp
 ```
+### 实例宕机重启 docker服务 Airflow容器自动启动  
+让 Docker 服务随系统启动  
+执行下面两条命令即可（只需一次）：  
+```powershell
+sudo systemctl enable docker
+sudo systemctl start docker
+```  
+验证：  
+```
+sudo systemctl status docker
+```  
+看到 `Loaded: enabled` 和 `Active: active (running)` 就表示开机会自动启动。
