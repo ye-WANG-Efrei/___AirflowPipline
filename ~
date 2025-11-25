@@ -12,11 +12,10 @@ x-airflow-common:
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
-    AIRFLOW__CORE__FERNET_KEY: ${FERNET_KEY}
+    AIRFLOW__CORE__FERNET_KEY: "YOUR_FERNET_KEY"
     AIRFLOW__WEBSERVER__RBAC: "true"
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
     AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
-    
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
@@ -46,3 +45,17 @@ services:
 
 volumes:
   postgres-db-volume:
+airflow-init:
+  <<: *airflow-common
+  command: >
+    bash -c '
+    airflow db init &&
+    airflow users create \
+      --username admin \
+      --password admin \
+      --firstname Air \
+      --lastname Flow \
+      --role Admin \
+      --email admin@example.com
+    '
+  environment
