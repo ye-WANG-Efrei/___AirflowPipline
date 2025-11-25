@@ -83,3 +83,83 @@ sudo curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker
 sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose
 
 ```
+
+ValueError: Fernet key must be 32 url-safe base64-encoded bytes.  
+是因为 Airflow 要加密：
+- Connections 的密码
+- Variables 中加密字段
+- XCom 加密数据（如果启用）  
+没有正确的 Fernet Key，Airflow 初始化时无法创建默认连接
+```scss
+create_default_connections()
+```
+解决方案：  
+生成一个合法的 Fernet Key，并写入 .env 或 docker-compose.yml  
+1. 在 EC2 上运行:
+```bash
+python3 - <<EOF
+from cryptography.fernet import Fernet
+print(Fernet.generate_key().decode())
+EOF
+```
+会得到类似这样的值：
+```
+6ByFhG8p8zjfhcVBtVgO1UZ5JT8F7HZhLPkP47bE5Vw=
+```
+2. 在.env文见中写进去
+```bash
+nano .env
+```
+此时.env文件应该是：
+```
+AIRFLOW_UID=1000 #但是这里也有可能是50000，因为有些配置如果你不给root（UID=50000）会被拒绝
+AIRFLOW_GID=0
+FERNET_KEY=6ByFhG8p8zjfhcVBtVgO1UZ5JT8F7HZhLPkP47bE5Vw=
+```
+保存退出：
+Ctrl + O → Enter → Ctrl + X  
+
+3. 更新 docker-compose.yml 让它加载 FERNET_KEY
+```yml
+environment:
+  AIRFLOW__CORE__FERNET_KEY: ${FERNET_KEY}
+```
+
+4. 重新初始化 Airflow DB
+重新清理容器：
+```
+docker-compose down -v
+```
+重新开始：
+```
+docker-compose up airflow-init
+```
+如果 init 成功（没有报错）  
+正常输出：
+```
+airflow-init-1 exited with code 0
+```
+查看容器启动：
+```powershell
+docker-compose ps
+```
+显示只有airflowpipline-postgres-1已启动：
+```
+airflowpipline-postgres-1   Up
+
+```
+最后启动所有容器
+```powershell
+docker-compose up -d
+```
+再查看状态：
+```powershell
+docker-compose ps
+```
+会显示：
+```
+NAME                                 IMAGE                              COMMAND                  SERVICE             CREATED         STATUS         PORTS
+airflowpipline-airflow-scheduler-1   apache/airflow:2.10.2-python3.12   "/usr/bin/dumb-init …"   airflow-scheduler   2 minutes ago   Up 2 minutes   8080/tcp
+airflowpipline-airflow-webserver-1   apache/airflow:2.10.2-python3.12   "/usr/bin/dumb-init …"   airflow-webserver   2 minutes ago   Up 2 minutes   0.0.0.0:8080->8080/tcp, :::8080->8080/tcp
+airflowpipline-postgres-1            postgres:15                        "docker-entrypoint.s…"   postgres            6 minutes ago   Up 6 minutes   5432/tcp
+```
