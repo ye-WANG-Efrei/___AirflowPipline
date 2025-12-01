@@ -65,12 +65,12 @@ services:
 
   airflow-init:    
     <<: *airflow-common #继承airflow-common所有配置
-    command: >  #运行cmd  #如果不用 bash -c，你没办法写 && 链式命令。
+    command: >  
       bash -c " 
       airflow db init &&
       airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com
       "
     restart: "no"
-
+    #运行cmd  #如果不用 bash -c，你没办法写 && 链式命令。
 volumes:
   postgres-db-volume:

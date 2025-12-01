@@ -201,7 +201,8 @@ services:
 ```
 这样，只要 Docker 启动，容器就会：自动启动  
 如果崩溃会自动重启
-#### bug 
+## BUGs 
+#### 1. 控件起不来，一直起来就shutdown！
 ```pgsql
 database system is ready to accept connections
 LOG: received fast shutdown request
@@ -238,4 +239,61 @@ depends_on:
   postgres:
     condition: service_healthy
 ```
+#### 2. Airflow UI一直转圈，但是服务都起来了
+日志一直出现
+```less
+Worker (pid:113) was sent SIGTERM!
+```
+这不是正常退出，这是 内核 OOM killer 在杀 worker。  
+**原因：🚨 你的 EC2 内存不够 → Gunicorn worker 被 OOM 杀死 → 页面永远加载不出来**
+```bash
+free -h
+```
+会看到 `swap` 为0。
+由于我是是 2GB 内存的机器：  
+Airflow 2.x 组件总共吃：
+- Airflow webserver ~ 450MB
+- Airflow scheduler ~ 400MB
+- Postgres ~ 150MB
+- Docker 程序开销 ~ 200MB
+- 容器基础 OS overhead ~ 300MB  
+合计超过 1.5GB，很容易爆 2GB RAM → OOM killer 直接杀掉 worker → UI 转圈。
+所以我们利用SWAP用了一部分*硬盘*来做*内存*，避免内存溢出被OOM
 
+代码：  
+1.创建 4GB swap 文件
+这个命令会在你的系统根目录 ``` / ``` 下创建一个文件：  
+👉 ```/swapfile```大小 =  4096MB（4GB）
+```bash
+sudo dd if=/dev/zero of=/swapfile bs=1M count=4096
+```
+2. 设置正确的权限 **(swapfile 必须让 只有 root 能访问)**
+```bash
+sudo chmod 600 /swapfile
+```
+3. 把这个文件标记为 swap 区域
+```bash
+sudo mkswap /swapfile
+```
+mkswap 的作用就是告诉内核：  
+
+👉 “这个 ```/swapfile ```文件现在不是普通文件了，我要把它当 swap 用。”
+
+4. 启用 swap
+```bash
+sudo swapon /swapfile
+```
+让内核真正开始使用：
+
+👉 ```/swapfile ```作为虚拟内存
+
+#### 3. docker compose down 之后重启有文件名字冲突
+1. ```docker ps -a```发现 ```init``` 和```scheduler```文件还在，但是状态时```create```而不是```up```  
+
+我先查了是不是我yml文件写错了，然后看是不是有多个容器，又看了收不是又多个yml文件，发现都没有问题  
+
+最后发现就是之前OOM这两个服务挂起来了。最后直接强行删除这两个服务，重新```up```解决了
+```bash
+docker rm -f airflowpipline-airflow-init-1
+docker rm -f airflowpipline-airflow-scheduler-1
+```
