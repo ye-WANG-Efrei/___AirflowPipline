@@ -1,33 +1,27 @@
-# transform_msg2eml.py
-import os
-from .config import LOCAL_RAW_MSG_PATH, LOCAL_EML_OUTPUT_PATH
-from . import msg2eml_lib   # ← 这是你那份超大脚本，被我放成一个模块
-import io
+# Email/transform_msg2eml.py
+import logging
+from pathlib import Path
+from Email.msg2eml_lib import load
 
-def transform_msg_to_eml(**context):
+logger = logging.getLogger(__name__)
+
+def convert_to_eml(msg_path: str) -> str:
     """
-    把 .msg 转成 .eml
-    使用 msg2eml_lib.load() 处理 MAPI 格式，并输出标准 MIME .eml。
+    把本地 .msg 文件转换为 .eml 返回 .eml 本地路径。
     """
 
-    print(f"[transform] loading .msg from {LOCAL_RAW_MSG_PATH}")
+    msg_file = Path(msg_path)
+    if not msg_file.exists():
+        raise FileNotFoundError(f"MSG file does not exist: {msg_file}")
 
-    # 1) 以二进制读入 .msg 文件
-    with open(LOCAL_RAW_MSG_PATH, "rb") as f:
-        msg_binary = f.read()
+    eml_file = msg_file.with_suffix(".eml")
 
-    # 2) 重要：转换库 load() 需要一个可以 seek()/tell() 的二进制流
-    bio = io.BytesIO(msg_binary)
+    logger.info("Start converting MSG to EML: %s → %s", msg_file, eml_file)
 
-    # 3) 调用 msg2eml 脚本（核心转换函数）
-    mime_msg = msg2eml_lib.load(bio)
+    with open(msg_file, "rb") as f:         # ← 二进制打开
+        msg = load(f)
+    with open(eml_file, "wb") as f: # 存入eml格式
+         f.write(msg.as_bytes())
 
-    # 4) 得到 MIME 对象后，写出 EML 文件
-    print(f"[transform] writing .eml to {LOCAL_EML_OUTPUT_PATH}")
-    with open(LOCAL_EML_OUTPUT_PATH, "wb") as f:
-        f.write(mime_msg.as_bytes())
-
-    print(f"[transform] .eml successfully created → {LOCAL_EML_OUTPUT_PATH}")
-
-    # 5) 推送 XCom（其它 task 可以读取）
-    context["ti"].xcom_push(key="eml_path", value=LOCAL_EML_OUTPUT_PATH)
+    logger.info("Finished converting MSG to EML: %s", eml_file)
+    return str(eml_file)
