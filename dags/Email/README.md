@@ -103,3 +103,60 @@ def cleanup_task(paths: List[str]) -> None:
 ```  
 功能：
 传入路径列表（.msg 和 .eml），删除本地文件，防止 /tmp 堆满。
+
+###  DAG 拓扑（最核心）
+```python
+keys = get_file_keys(file_keys)
+```
+
+
+① 拿到最终的 S3 key 列表，例如：  
+```python
+["a.msg", "b.msg", "c.msg"]
+msg_paths = extract_task.expand(file_key=keys)
+```
+
+② 并行运行 Extract  
+expand() = 动态任务映射    
+等于生成多个任务：
+- extract(a.msg)
+
+- extract(b.msg)
+
+- extract(c.msg)
+
+返回值是：
+["/tmp/a.msg", "/tmp/b.msg", "/tmp/c.msg"]
+
+eml_paths = transform_task.expand(msg_local_path=msg_paths)
+
+
+③ 并行 msg → eml
+每个 msg_path 对应一个 transform 任务。
+
+返回：
+["/tmp/a.eml", "/tmp/b.eml", "/tmp/c.eml"]
+
+uploaded_keys = load_task.expand(
+    eml_local_path=eml_paths,
+    original_file_key=keys,
+)
+
+
+④ 并行上传 eml
+每个 eml_path + file_key 配对生成一个 upload task。
+
+cleanup_task(msg_paths + eml_paths) >> uploaded_keys
+
+
+⑤ 清理临时文件：
+删除所有 /tmp/*.msg 和 /tmp/*.eml
+
+>> uploaded_keys 表示：
+cleanup 要 等 upload 全部完成之后 才能执行。
+
+🔥 10. Airflow 需要实例化 DAG
+dag = msg_to_eml_etl_dag()
+
+
+没有这句 DAG 不会出现在 Airflow UI
