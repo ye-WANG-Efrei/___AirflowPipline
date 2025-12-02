@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 s3 = boto3.client("s3")
 
 
-def extract_msg_from_s3(file_key: str) -> str:
+def extract_from_s3(file_key: str) -> str:
     """
     从 S3 流式下载 .msg 到本地 /tmp，返回本地路径。
     只下载，不解析、不修改内容。
