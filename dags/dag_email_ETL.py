@@ -1,6 +1,6 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.providers.amazon.aws.sensors.s3 import S3PrefixSensor
+from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
 from datetime import datetime, timedelta
 from Email.extract_from_s3 import extract_from_s3
 
