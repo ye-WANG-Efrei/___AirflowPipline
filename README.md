@@ -297,3 +297,48 @@ sudo swapon /swapfile
 docker rm -f airflowpipline-airflow-init-1
 docker rm -f airflowpipline-airflow-scheduler-1
 ```
+#### 4.Airflow 没有权限写 /opt/airflow/logs 导致Init起不来
+docker-compose.yml 完全正确，
+Airflow 失败的原因现在只剩 宿主机 logs 残留权限错误。  
+错误：
+```swift
+PermissionError: [Errno 13] Permission denied: '/opt/airflow/logs/scheduler/2025-12-02'
+```
+因为：
+第一次初始化失败的时候:
+1. scheduler 尝试写日志失败
+
+2. 容器内部创建了部分目录（root 权限）
+
+3. 导致宿主机 logs 同步成 root-owned
+
+之后：
+
+- 再怎么 chmod logs 都没用（子目录 root-owned）
+
+- Airflow 用户（UID=1000）无权写
+
+- init 永远失败
+
+只有清空 logs 才能完全修复。
+解决方案就是：**删除 logs 目录**  
+**这是 Airflow 官方文档也给出的修复方法。**
+
+执行：
+```bash
+sudo rm -rf logs
+mkdir logs
+sudo chmod -R 777 logs
+```
+最终启动步骤：
+```bash
+docker compose down --volumes
+sudo rm -rf logs
+mkdir logs
+chmod -R 777 logs
+docker compose up airflow-init
+```
+然后你会看到"
+```bash
+airflow-init ... done
+```

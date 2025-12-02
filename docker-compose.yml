@@ -1,74 +1,74 @@
-#version: '3.8'  #最新版本 顶行命令 obsolete
+  #version: '3.8'  #最新版本 顶行命令 obsolete
 
-x-airflow-common:
-  &airflow-common
-  #image: your-account-id.dkr.ecr.eu-west-1.amazonaws.com/airflow:latest
-  # 或者一开始先用官方镜像测试：
-  image: apache/airflow:2.10.2-python3.12
-  env_file:
-    - .env
-  environment:
-    &airflow-common-env
-    AIRFLOW__CORE__EXECUTOR: LocalExecutor
-    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
-    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
-    AIRFLOW__CORE__FERNET_KEY: ${FERNET_KEY}
-    AIRFLOW__WEBSERVER__RBAC: "true"
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
-    AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
-    
-  volumes:
-    - ./dags:/opt/airflow/dags
-    - ./logs:/opt/airflow/logs
-    - ./plugins:/opt/airflow/plugins
-  depends_on:
-    - postgres
-
-services:
-  postgres:
-    image: postgres:15
-    restart: always
+  x-airflow-common:
+    &airflow-common
+    #image: your-account-id.dkr.ecr.eu-west-1.amazonaws.com/airflow:latest
+    # 或者一开始先用官方镜像测试：
+    image: apache/airflow:2.10.2-python3.12
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: airflow
-      POSTGRES_DB: airflow
+      &airflow-common-env
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__FERNET_KEY: ${FERNET_KEY}
+      AIRFLOW__WEBSERVER__RBAC: "true"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      
     volumes:
-      - postgres-db-volume:/var/lib/postgresql/data
-    #不需要port 因为postgres只对内访问不对外暴露
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "airflow"]
-      interval: 10s
-      retries: 5
-      start_period: 10s
-
-  airflow-webserver:
-    <<: *airflow-common
-    command: webserver
-    restart: always
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
     depends_on:
-      postgres:
-        condition: service_healthy
-    ports:
-      - "8080:8080"
+      - postgres
+
+  services:
+    postgres:
+      image: postgres:15
+      restart: always
+      environment:
+        POSTGRES_USER: airflow
+        POSTGRES_PASSWORD: airflow
+        POSTGRES_DB: airflow
+      volumes:
+        - postgres-db-volume:/var/lib/postgresql/data
+      #不需要port 因为postgres只对内访问不对外暴露
+      healthcheck:
+        test: ["CMD", "pg_isready", "-U", "airflow"]
+        interval: 10s
+        retries: 5
+        start_period: 10s
+
+    airflow-webserver:
+      <<: *airflow-common
+      command: webserver
+      restart: always
+      depends_on:
+        postgres:
+          condition: service_healthy
+      ports:
+        - "8080:8080"
 
 
-  airflow-scheduler:
-    <<: *airflow-common   
-    command: scheduler
-    restart: always
-    depends_on:
-      postgres:
-        condition: service_healthy
+    airflow-scheduler:
+      <<: *airflow-common   
+      command: scheduler
+      restart: always
+      depends_on:
+        postgres:
+          condition: service_healthy
 
 
-  airflow-init:    
-    <<: *airflow-common #继承airflow-common所有配置
-    command: >  
-      bash -c " 
-      airflow db init &&
-      airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com
-      "
-    restart: "no"
-    #运行cmd  #如果不用 bash -c，你没办法写 && 链式命令。
-volumes:
-  postgres-db-volume:
+    airflow-init:    
+      <<: *airflow-common #继承airflow-common所有配置
+      command: >  
+        bash -c " 
+        airflow db init &&
+        airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com
+        "
+      restart: "no"
+      #运行cmd  #如果不用 bash -c，你没办法写 && 链式命令。
+  volumes:
+    postgres-db-volume:
