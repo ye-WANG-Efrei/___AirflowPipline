@@ -35,7 +35,15 @@ aws-airflow-pipeline/
 ├─ README.md
 
 ```
-
+**EC2**
+```
+sudo chown -R ec2-user:ec2-user dags logs plugins
+```
+**Airflow**
+```
+sudo chown -R 50000:50000 dags logs plugins
+docker compose restart
+```
 ## EC2文件结构
 ```
 /home/ec2-user/airflow/
