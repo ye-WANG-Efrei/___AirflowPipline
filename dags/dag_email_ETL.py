@@ -2,7 +2,7 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
-from Email.extract_from_s3 import extract_msg_from_s3
+from Email.extract_from_s3 import extract_from_s3
 
 
 
