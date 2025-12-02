@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from Email.extract_from_s3 import extract_from_s3
 
 
+
+
 BUCKET = "airflow-dags-bucket-20251121"
 PREFIX = "dags/"   # 你监听的目录
 
@@ -26,13 +28,14 @@ with DAG(
 ) as dag:
 
     # Step 1: 监听某个 S3 prefix（自动发现新文件）
-    wait_for_file = S3PrefixSensor(
+
+    wait_for_file = S3KeySensor(
         task_id="wait_for_s3_file",
         bucket_name=BUCKET,
-        prefix=PREFIX,
-        poke_interval=60,   # 每 60 秒检查一次
-        timeout=60 * 60 * 24,  # 超时 24 小时
-        mode="poke",
+        bucket_key=f"{PREFIX}*",
+        wildcard_match=True,
+        poke_interval=60,
+        timeout=5,
     )
 
     # Step 2: 获取 sensor 发现的文件 key
