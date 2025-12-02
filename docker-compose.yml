@@ -50,8 +50,7 @@ services:
         condition: service_healthy
     ports:
       - "8080:8080"
-    volumes:
-      - ./dags:/opt/airflow/dags
+
 
   airflow-scheduler:
     <<: *airflow-common   
@@ -60,8 +59,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - ./dags:/opt/airflow/dags
+
 
   airflow-init:    
     <<: *airflow-common #继承airflow-common所有配置
