@@ -3,7 +3,8 @@ import logging
 from pathlib import Path
 
 import boto3
-from airflow.decorators import get_current_context
+from airflow.operators.python import get_current_context
+
 
 from Email.config import RAW_BUCKET, LOCAL_TMP_DIR
 
