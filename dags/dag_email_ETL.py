@@ -54,9 +54,8 @@ with DAG(
     # Step 1: 监听某个 S3 prefix（自动发现新文件）
     wait_for_file = S3KeySensor(
         task_id="wait_for_s3_file",
-        bucket_name=BUCKET,
-        bucket_key="dags/FW_ Account Created Successfully_(User：Slim Haj Romdhane 00963012)_.msg",  # 完整路径
-        wildcard_match=False,  # 关闭通配符
+        bucket_name="airflow-dags-bucket-20251121",
+        bucket_key="dags/",
         poke_interval=30,
         timeout=300,
     )
