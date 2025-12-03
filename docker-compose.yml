@@ -48,6 +48,10 @@
     airflow-webserver:
       <<: *airflow-common
       command: webserver
+      environment:
+      <<: *airflow-common-env
+      AWS_EC2_METADATA_DISABLED: "false"
+      AWS_DEFAULT_REGION: "us-east-1"
       restart: always
       depends_on:
         postgres:
@@ -59,6 +63,10 @@
     airflow-scheduler:
       <<: *airflow-common   
       command: scheduler
+            environment:
+      <<: *airflow-common-env
+      AWS_EC2_METADATA_DISABLED: "false"
+      AWS_DEFAULT_REGION: "us-east-1"
       restart: always
       depends_on:
         postgres:
