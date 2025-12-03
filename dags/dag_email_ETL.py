@@ -33,7 +33,7 @@ def process_file(file_key: str):
 def test_s3_login():
     """测试s3是否能正常访问"""
     try:
-        s3= = boto.client("s3")
+        s3=  boto.client("s3")
         s3.list_buckets()
         logger.info("S3 login SUCCESS.")
     except Exception as e:
