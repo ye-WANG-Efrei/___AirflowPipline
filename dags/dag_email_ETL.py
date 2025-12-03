@@ -75,6 +75,7 @@ with DAG(
         log_task_state("pick_file", "START")
 
         files = context["ti"].xcom_pull(task_ids="wait_for_s3_file")
+        print(">>> XCOM FROM SENSOR:", files)
         logger.info("Files detected by S3KeySensor: %s", files)
         if not files:
             raise ValueError("No files detected in prefix!")
