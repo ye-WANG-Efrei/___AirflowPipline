@@ -7,8 +7,8 @@ import logging
 
 
 
-logger - logging.getLogger(__name__
-)
+logger =logging.getLogger(__name__)
+
 BUCKET = "airflow-dags-bucket-20251121"
 PREFIX = "dags/"   # 你监听的目录
 
