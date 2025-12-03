@@ -3,18 +3,42 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
 from datetime import datetime, timedelta
 from Email.extract_from_s3 import extract_from_s3
+import logging
 
 
 
-
+logger - logging.getLogger(__name__
+)
 BUCKET = "airflow-dags-bucket-20251121"
 PREFIX = "dags/"   # 你监听的目录
 
+def log_task_state(taks_name:str, state :str):
+    logger.info("=====Task [%s] Status: %s ====", taks_name, state)
+
+
 def process_file(file_key: str):
     """ETL 主流程（file_key 自动从 Sensor 得到）"""
-    local_path = extract_from_s3(file_key)
+    log_task_state("run_etl", "START")
+
+    logger.info("Downloading file from S3: %s", file_key)
+    try:
+        local_path = extract_from_s3(file_key)
+        logger.info("File downloaded to tmp path: %s", local_path)
+    except Exception as e:
+        logger.info("File downloaded Failed: %s", e)
+
+    log_task_state("run_etl", "END")
     return local_path
 
+def test_s3_login():
+    """测试s3是否能正常访问"""
+    try:
+        s3= = boto.client("s3")
+        s3.list_buckets()
+        logger.info("S3 login SUCCESS.")
+    except Exception as e:
+        logger.error("S3 login FAILED: %s", str(e))
+        raise
 
 with DAG(
     dag_id="email_s3_auto_etl",
@@ -41,8 +65,16 @@ with DAG(
     # Step 2: 获取 sensor 发现的文件 key
     def pick_file_key(**context):
         """从 S3PrefixSensor 提供的 keys 列表里取一个最新文件"""
+        log_task_state("pick_file", "START")
+
         files = context["ti"].xcom_pull(task_ids="wait_for_s3_file")
+        logger.info("Files detected by S3KeySensor: %s", files)
+        if not files:
+            raise ValueError("No files detected in prefix!")
+
         file_key = files[0]  # 取第一个
+        logger.info("Selected file: %s", file_key)
+        log_task_state("pick_file", "END")
         return file_key
 
     choose_file = PythonOperator(
