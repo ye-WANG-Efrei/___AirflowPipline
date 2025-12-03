@@ -55,10 +55,10 @@ with DAG(
     wait_for_file = S3KeySensor(
         task_id="wait_for_s3_file",
         bucket_name=BUCKET,
-        bucket_key=f"{PREFIX}*.msg",  # 改成匹配 .msg 文件
-        wildcard_match=True,
-        poke_interval=60,
-        timeout=300,  # 
+        bucket_key="dags/FW_ Account Created Successfully_(User：Slim Haj Romdhane 00963012)_.msg",  # 完整路径
+        wildcard_match=False,  # 关闭通配符
+        poke_interval=30,
+        timeout=300,
     )
     # wait_for_file = S3KeySensor(
     #     task_id="wait_for_s3_file",
