@@ -17,8 +17,8 @@
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
       #让 Docker 容器能访问 EC2 元数据（IMDS），自动继承 EC2 IAM Role 的权限。
-      AWS_EC2_METADATA_DISABLED=false
-      AWS_DEFAULT_REGION=us-east-1
+      AWS_EC2_METADATA_DISABLED : false
+      AWS_DEFAULT_REGION : us-east-1
 
       
     user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
