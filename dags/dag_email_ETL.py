@@ -58,6 +58,7 @@ with DAG(
         bucket_key="dags/",
         poke_interval=30,
         timeout=300,
+        do_xcom_push=True, #传输xcom给下一个任务
     )
     # wait_for_file = S3KeySensor(
     #     task_id="wait_for_s3_file",
