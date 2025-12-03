@@ -52,15 +52,22 @@ with DAG(
 ) as dag:
 
     # Step 1: 监听某个 S3 prefix（自动发现新文件）
-
     wait_for_file = S3KeySensor(
         task_id="wait_for_s3_file",
         bucket_name=BUCKET,
-        bucket_key=f"{PREFIX}*",
+        bucket_key=f"{PREFIX}*.msg",  # 改成匹配 .msg 文件
         wildcard_match=True,
         poke_interval=60,
-        timeout=5,
+        timeout=300,  # 
     )
+    # wait_for_file = S3KeySensor(
+    #     task_id="wait_for_s3_file",
+    #     bucket_name=BUCKET,
+    #     bucket_key=f"{PREFIX}*",
+    #     wildcard_match=True,
+    #     poke_interval=60,
+    #     timeout=5,
+    # )
 
     # Step 2: 获取 sensor 发现的文件 key
     def pick_file_key(**context):
